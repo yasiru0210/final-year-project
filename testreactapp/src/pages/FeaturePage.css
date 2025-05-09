@@ -1,0 +1,233 @@
+.feature-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #e0e7ff 0%, #ffffff 100%);
+    padding: 1.5rem;
+}
+
+.feature-card {
+    max-width: 64rem;
+    margin: 0 auto;
+}
+
+.content-card {
+    background-color: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e40af;
+    letter-spacing: -0.025em;
+    margin-bottom: 0.75rem;
+}
+
+.description {
+    color: #4b5563;
+    max-width: 32rem;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.upload-section {
+    background-color: #eef2ff;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.upload-container {
+    border: 2px dashed #c7d2fe;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.upload-container:hover {
+    border-color: #6366f1;
+    background-color: #f5f7ff;
+}
+
+.upload-icon {
+    width: 4rem;
+    height: 4rem;
+    background-color: #e0e7ff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+}
+
+.upload-icon svg {
+    width: 2rem;
+    height: 2rem;
+    color: #4f46e5;
+}
+
+.upload-text {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+.upload-subtext {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.weights-section {
+    background-color: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.weights-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+}
+
+.weights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 2rem;
+}
+
+.weight-item {
+    position: relative;
+}
+
+.weight-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.weight-label {
+    font-weight: 500;
+    color: #374151;
+    text-transform: capitalize;
+}
+
+.weight-value {
+    background-color: #eef2ff;
+    color: #4f46e5;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.range-container {
+    position: relative;
+    padding-top: 1.5rem;
+}
+
+.range-marks {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.range-input {
+    width: 100%;
+    height: 0.5rem;
+    background-color: #e0e7ff;
+    border-radius: 0.25rem;
+    appearance: none;
+    cursor: pointer;
+}
+
+.range-input::-webkit-slider-thumb {
+    appearance: none;
+    width: 1rem;
+    height: 1rem;
+    background-color: #4f46e5;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.range-input::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.submit-button {
+    width: 100%;
+    background-color: #4f46e5;
+    color: white;
+    font-weight: 600;
+    padding: 0.875rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.submit-button:hover:not(:disabled) {
+    background-color: #4338ca;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.submit-button:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .feature-container {
+        padding: 1rem;
+    }
+
+    .content-card {
+        padding: 1.5rem;
+    }
+
+    .title {
+        font-size: 1.75rem;
+    }
+
+    .weights-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+} 
