@@ -37,9 +37,7 @@ function NavBar() {
           <Link to="/" className={`nav-link ${isActive('/') ? 'active' : ''}`}>
             Home
           </Link>
-          <Link to="/admin" className={`nav-link ${isActive('/admin') ? 'active' : ''}`}>
-            Admin
-          </Link>
+          
           <Link to="/identify" className={`nav-link ${isActive('/identify') ? 'active' : ''}`}>
             Identify
           </Link>
@@ -63,7 +61,7 @@ function App() {
         <main className="main-content">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/admin" element={<AdminPanel />} />
+           
             <Route path="/identify" element={<FeaturePage />} />
             <Route path="/results" element={<Results />} />
             <Route path="/history" element={<SketchHistory />} />

@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.post('/register', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, role } = req.body;
 
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
@@ -17,7 +17,7 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    const user = new User({ username, email, password });
+    const user = new User({ username, email, password, role });
     await user.save();
 
     const token = jwt.sign(
@@ -47,13 +47,13 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ role: 'admin' });
     if (!user) {
-      return res.status(401).json({
+      return res.status(404).json({
         success: false,
-        error: 'Invalid credentials'
+        error: 'Admin user not found'
       });
     }
 
@@ -61,7 +61,7 @@ router.post('/login', async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({
         success: false,
-        error: 'Invalid credentials'
+        error: 'Invalid password'
       });
     }
 

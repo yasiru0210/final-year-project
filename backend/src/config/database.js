@@ -4,13 +4,15 @@ const { logger } = require('../utils/logger');
 
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/face-recognition';
+    const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/face-recognition';
     
     const conn = await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
+      connectTimeoutMS: 30000,
+      family: 4
     });
 
     logger.info(`MongoDB Connected: ${conn.connection.host}`);
@@ -37,7 +39,10 @@ const connectDB = async () => {
 
   } catch (error) {
     logger.error(`Error connecting to MongoDB: ${error.message}`);
-    process.exit(1);
+    setTimeout(() => {
+      logger.info('Retrying MongoDB connection...');
+      connectDB();
+    }, 5000);
   }
 };
 

@@ -1,8 +1,8 @@
 const faceapi = require('face-api.js');
 const { Canvas, Image, ImageData } = require('canvas');
-const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
+const Jimp = require('jimp');
 
 // Initialize face-api.js
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
@@ -109,15 +109,11 @@ class FaceRecognitionService {
   }
 
   async preprocessImage(imagePath) {
-    await sharp(imagePath)
-      .resize(800, 800, {
-        fit: 'inside',
-        withoutEnlargement: true
-      })
+    const image = await Jimp.read(imagePath);
+    image
+      .resize(800, Jimp.AUTO) // width 800, auto height
       .normalize()
-      .toFile(imagePath + '_processed');
-
-    fs.renameSync(imagePath + '_processed', imagePath);
+      .write(imagePath); // overwrite the original file
     return imagePath;
   }
 

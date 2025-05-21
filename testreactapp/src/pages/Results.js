@@ -3,26 +3,50 @@
 import React, { useEffect, useState } from "react";
 import "./Results.css";
 
+// Inline SVG placeholder image
+const placeholderImage = `data:image/svg+xml;base64,${btoa(`
+<svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="300" fill="#F3F4F6"/>
+  <circle cx="150" cy="100" r="50" fill="#D1D5DB"/>
+  <path d="M75 250C75 211.34 108.34 180 150 180C191.66 180 225 211.34 225 250V300H75V250Z" fill="#D1D5DB"/>
+</svg>
+`)}`;
+
 export default function Results() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch("http://localhost:8082/api/results")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch results");
-        return res.json();
-      })
-      .then((data) => {
-        setResults(data);
+    // Simulating API call with mock data
+    const fetchMockData = async () => {
+      try {
+        // Create mock data with placeholder image
+        const mockData = Array.from({ length: 10 }, (_, index) => ({
+          id: index + 1,
+          image: placeholderImage,
+          description: `Person ${index + 1}`,
+          similarity: (Math.random() * 0.5 + 0.5).toFixed(2), // Random similarity between 0.5 and 1
+          metadata: {
+            age: Math.floor(Math.random() * 30 + 20), // Random age between 20-50
+            gender: Math.random() > 0.5 ? "Male" : "Female",
+            location: `Location ${index + 1}`
+          }
+        }));
+
+        // Sort by similarity score
+        mockData.sort((a, b) => b.similarity - a.similarity);
+        
+        setResults(mockData);
         setLoading(false);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Error loading results:", err);
         setError("Failed to load results. Please try again later.");
         setLoading(false);
-      });
+      }
+    };
+
+    fetchMockData();
   }, []);
 
   const getBadge = (index) => {
@@ -52,14 +76,20 @@ export default function Results() {
               <span>Best Match</span>
             </h3>
             <img
-              src={`data:image/jpeg;base64,${results[0].image}`}
+              src={results[0].image}
               alt="Top Match"
               className="best-match-image"
             />
             <div className="best-match-info">
-              <p className="best-match-name">{results[0].name || "Unknown"}</p>
-              <p className="best-match-score">Score: {results[0].score}</p>
-              <p className="best-match-age">Age: {results[0].age}</p>
+              <p className="best-match-description">{results[0].description}</p>
+              <p className="best-match-similarity">Similarity: {(results[0].similarity * 100).toFixed(2)}%</p>
+              {results[0].metadata && (
+                <p className="best-match-metadata">
+                  {Object.entries(results[0].metadata).map(([key, value]) => (
+                    <span key={key}>{key}: {value} </span>
+                  ))}
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -67,10 +97,10 @@ export default function Results() {
         {/* Grid for other matches */}
         <div className="results-grid">
           {results.map((item, index) => (
-            <div key={index} className="result-card">
+            <div key={item.id} className="result-card">
               <div className="result-image-container">
                 <img
-                  src={`data:image/jpeg;base64,${item.image}`}
+                  src={item.image}
                   alt={`Match ${index + 1}`}
                   className="result-image"
                 />
@@ -81,9 +111,15 @@ export default function Results() {
                 )}
               </div>
               <div className="result-info">
-                <p className="result-name">{item.name || "Unknown"}</p>
-                <p className="result-score">Score: {item.score}</p>
-                <p className="result-age">Age: {item.age}</p>
+                <p className="result-description">{item.description}</p>
+                <p className="result-similarity">Similarity: {(item.similarity * 100).toFixed(2)}%</p>
+                {item.metadata && (
+                  <p className="result-metadata">
+                    {Object.entries(item.metadata).map(([key, value]) => (
+                      <span key={key}>{key}: {value} </span>
+                    ))}
+                  </p>
+                )}
               </div>
             </div>
           ))}

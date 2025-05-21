@@ -1,57 +1,82 @@
 // src/pages/FeaturePage.jsx
 
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./FeaturePage.css";
 
 export default function FeaturePage() {
-  const [sketch, setSketch] = useState(null);
+  const [sketches, setSketches] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [weights, setWeights] = useState({
-    face: 1.0,
-    eyes: 1.0,
-    nose: 1.0,
-    mouth: 1.0,
-  });
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Load existing sketches from localStorage
+    const savedSketches = localStorage.getItem('sketches');
+    if (savedSketches) {
+      setSketches(JSON.parse(savedSketches));
+    }
+  }, []);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setSketch(file);
+      if (sketches.length >= 10) {
+        alert("Maximum 10 sketches allowed!");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const newSketch = {
+          id: Date.now(),
+          image: reader.result,
+          name: file.name,
+          timestamp: new Date().toISOString(),
+          weights: {
+            face: 1.0,
+            eyes: 1.0,
+            nose: 1.0,
+            mouth: 1.0,
+          }
+        };
+        
+        const updatedSketches = [...sketches, newSketch];
+        setSketches(updatedSketches);
+        localStorage.setItem('sketches', JSON.stringify(updatedSketches));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleWeightChange = (e) => {
-    const { name, value } = e.target;
-    setWeights({ ...weights, [name]: parseFloat(value) });
+  const handleWeightChange = (sketchId, feature, value) => {
+    const updatedSketches = sketches.map(sketch => {
+      if (sketch.id === sketchId) {
+        return {
+          ...sketch,
+          weights: {
+            ...sketch.weights,
+            [feature]: parseFloat(value)
+          }
+        };
+      }
+      return sketch;
+    });
+    setSketches(updatedSketches);
+    localStorage.setItem('sketches', JSON.stringify(updatedSketches));
   };
 
-  const submitSketch = async () => {
-    if (!sketch) {
-      alert("Please upload a sketch image.");
+  const removeSketch = (id) => {
+    const updatedSketches = sketches.filter(sketch => sketch.id !== id);
+    setSketches(updatedSketches);
+    localStorage.setItem('sketches', JSON.stringify(updatedSketches));
+  };
+
+  const submitSketches = () => {
+    if (sketches.length === 0) {
+      alert("Please upload at least one sketch.");
       return;
     }
-  
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append("sketchFile", sketch);
-    formData.append("weightsJson", JSON.stringify(weights));
-  
-    try {
-      await axios.post("http://localhost:8082/api/identify", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      navigate("/results");
-    } catch (err) {
-      console.error("Error:", err);
-      alert("Failed to identify sketch. Please try again.");
-    } finally {
-      setIsUploading(false);
-    }
+    navigate("/results");
   };
 
   return (
@@ -61,7 +86,7 @@ export default function FeaturePage() {
           <div className="header">
             <h2 className="title">Feature Analysis</h2>
             <p className="description">
-              Upload the witness sketch and adjust feature weights to optimize the identification process
+              Upload up to 10 witness sketches and adjust feature weights for each sketch
             </p>
           </div>
 
@@ -74,10 +99,11 @@ export default function FeaturePage() {
                   accept="image/*"
                   className="hidden"
                   id="sketch-upload"
+                  disabled={sketches.length >= 10}
                 />
                 <label
                   htmlFor="sketch-upload"
-                  className="cursor-pointer block w-full"
+                  className={`cursor-pointer block w-full ${sketches.length >= 10 ? 'opacity-50' : ''}`}
                 >
                   <div className="upload-icon">
                     <svg
@@ -96,53 +122,69 @@ export default function FeaturePage() {
                     </svg>
                   </div>
                   <p className="upload-text">
-                    {sketch ? "Change Sketch" : "Upload Sketch"}
+                    {sketches.length >= 10 ? "Maximum sketches reached" : "Upload Sketch"}
                   </p>
                   <p className="upload-subtext">
-                    {sketch ? sketch.name : "PNG, JPG, or JPEG up to 10MB"}
+                    {sketches.length}/10 sketches uploaded
                   </p>
                 </label>
               </div>
             </div>
 
-            <div className="weights-section">
-              <h3 className="weights-title">Feature Weights</h3>
-              <div className="weights-grid">
-                {["face", "eyes", "nose", "mouth"].map((feature) => (
-                  <div key={feature} className="weight-item">
-                    <div className="weight-header">
-                      <label className="weight-label">
-                        {feature}
-                      </label>
-                      <span className="weight-value">
-                        {weights[feature].toFixed(1)}
-                      </span>
+            {sketches.length > 0 && (
+              <div className="sketches-grid">
+                {sketches.map((sketch) => (
+                  <div key={sketch.id} className="sketch-card">
+                    <div className="sketch-image-container">
+                      <img src={sketch.image} alt="Sketch" className="sketch-image" />
+                      <button
+                        onClick={() => removeSketch(sketch.id)}
+                        className="remove-sketch"
+                      >
+                        Remove
+                      </button>
                     </div>
-                    <div className="range-container">
-                      <div className="range-marks">
-                        <span>0</span>
-                        <span>1</span>
-                        <span>2</span>
+                    <div className="sketch-weights">
+                      <h3 className="sketch-title">Feature Weights</h3>
+                      <div className="weights-grid">
+                        {["face", "eyes", "nose", "mouth"].map((feature) => (
+                          <div key={feature} className="weight-item">
+                            <div className="weight-header">
+                              <label className="weight-label">
+                                {feature}
+                              </label>
+                              <span className="weight-value">
+                                {sketch.weights[feature].toFixed(1)}
+                              </span>
+                            </div>
+                            <div className="range-container">
+                              <div className="range-marks">
+                                <span>0</span>
+                                <span>1</span>
+                                <span>2</span>
+                              </div>
+                              <input
+                                type="range"
+                                min="0"
+                                max="2"
+                                step="0.1"
+                                value={sketch.weights[feature]}
+                                onChange={(e) => handleWeightChange(sketch.id, feature, e.target.value)}
+                                className="range-input"
+                              />
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <input
-                        type="range"
-                        name={feature}
-                        min="0"
-                        max="2"
-                        step="0.1"
-                        value={weights[feature]}
-                        onChange={handleWeightChange}
-                        className="range-input"
-                      />
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            )}
 
             <button
-              onClick={submitSketch}
-              disabled={isUploading || !sketch}
+              onClick={submitSketches}
+              disabled={isUploading || sketches.length === 0}
               className="submit-button"
             >
               {isUploading ? (
