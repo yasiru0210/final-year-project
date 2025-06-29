@@ -60,10 +60,18 @@ const faceSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  relatedMugshots: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Face'
+  }],
+  isMainMugshot: {
+    type: Boolean,
+    default: false
   }
 });
 
 faceSchema.index({ features: '2dsphere' });
 faceSchema.index({ type: 1, isActive: 1 });
 
-module.exports = mongoose.model('Face', faceSchema); 
+module.exports = mongoose.model('Face', faceSchema);

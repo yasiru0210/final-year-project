@@ -41,6 +41,7 @@ function NavBar() {
           <Link to="/identify" className={`nav-link ${isActive('/identify') ? 'active' : ''}`}>
             Identify
           </Link>
+          
           <Link to="/results" className={`nav-link ${isActive('/results') ? 'active' : ''}`}>
             Results
           </Link>
@@ -63,6 +64,7 @@ function App() {
             <Route path="/" element={<Home />} />
            
             <Route path="/identify" element={<FeaturePage />} />
+            
             <Route path="/results" element={<Results />} />
             <Route path="/history" element={<SketchHistory />} />
           </Routes>

@@ -22,7 +22,7 @@ export default function Results() {
     const fetchMockData = async () => {
       try {
         // Create mock data with placeholder image
-        const mockData = Array.from({ length: 10 }, (_, index) => ({
+        const mockData = Array.from({ length: 5 }, (_, index) => ({
           id: index + 1,
           image: placeholderImage,
           description: `Person ${index + 1}`,

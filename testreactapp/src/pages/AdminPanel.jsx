@@ -12,7 +12,8 @@ export default function AdminPanel() {
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [nic, setNic] = useState("");
-  const [image, setImage] = useState(null);
+  const [images, setImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploadedMugshots, setUploadedMugshots] = useState([]);
@@ -84,54 +85,88 @@ export default function AdminPanel() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!image || !name || !age || !nic) {
-      setMessage("All fields are required!");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("image", image);
-
-    // Combine name, age, and nic into description and metadata
-    const description = `Name: ${name}, Age: ${age}, NIC: ${nic}`;
-    const metadata = JSON.stringify({ name, age, nic });
-
-    formData.append("description", description);
-    formData.append("metadata", metadata);
-
-    const token = localStorage.getItem("token");
+    setLoading(true);
+    setMessage("");
 
     try {
-      setLoading(true);
-      const response = await axios.post("http://localhost:5000/api/faces/upload/mugshot", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
+      if (images.length === 0) {
+        throw new Error("Please select at least one image");
+      }
+
+      if (images.length > 5) {
+        throw new Error("Maximum 5 images allowed");
+      }
+
+      const formData = new FormData();
+      images.forEach((image, index) => {
+        formData.append("mugshots", image);
       });
-      
-      setMessage("Mugshot uploaded successfully ✅");
+      formData.append("name", name);
+      formData.append("age", age);
+      formData.append("nic", nic);
+      formData.append("metadata", JSON.stringify({ age, nic }));
+
+      const response = await axios.post(
+        "http://localhost:5000/api/faces/upload/mugshots",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      setMessage("Mugshots uploaded successfully!");
       setName("");
       setAge("");
       setNic("");
-      setImage(null);
+      setImages([]);
+      setImagePreviews([]);
       
-      // Refresh mugshots list
-      fetchMugshots(token);
-    } catch (err) {
-      console.error(err);
-      if (err.response?.status === 401) {
-        setMessage("Session expired. Please log in again.");
-        setAuthenticated(false);
-        localStorage.removeItem("token");
-      } else {
-        setMessage(err.response?.data?.message || "Upload failed ❌");
-      }
+      // Add new mugshots to the list
+      setUploadedMugshots(prev => [...response.data.faces, ...prev]);
+    } catch (error) {
+      setMessage(error.response?.data?.error || error.message || "Error uploading mugshots");
     } finally {
       setLoading(false);
     }
   };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 5) {
+      setMessage("Maximum 5 images allowed");
+      return;
+    }
+    setImages(files);
+    
+    // Generate previews
+    const previews = files.map(file => ({
+      file,
+      url: URL.createObjectURL(file)
+    }));
+    setImagePreviews(previews);
+    setMessage("");
+  };
+
+  const removeImage = (index) => {
+    const newImages = [...images];
+    newImages.splice(index, 1);
+    setImages(newImages);
+
+    const newPreviews = [...imagePreviews];
+    URL.revokeObjectURL(newPreviews[index].url);
+    newPreviews.splice(index, 1);
+    setImagePreviews(newPreviews);
+  };
+
+  // Cleanup previews when component unmounts
+  useEffect(() => {
+    return () => {
+      imagePreviews.forEach(preview => URL.revokeObjectURL(preview.url));
+    };
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -189,7 +224,7 @@ export default function AdminPanel() {
     <div className="admin-container">
       <div className="admin-card">
         <div className="admin-header">
-          <h2 className="admin-title">Admin - Upload Mugshot</h2>
+          <h2 className="admin-title">Admin - Upload Mugshots</h2>
           <button onClick={handleLogout} className="logout-button">
             Logout
           </button>
@@ -238,19 +273,41 @@ export default function AdminPanel() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Mugshot Image:</label>
+            <label className="form-label">Mugshot Images (up to 5):</label>
             <input
               type="file"
               accept="image/*"
               className="file-input"
-              onChange={(e) => setImage(e.target.files[0])}
+              onChange={handleFileChange}
+              multiple
               required
             />
+            <small className="help-text">You can select up to 5 images at once</small>
+            {imagePreviews.length > 0 && (
+              <div className="image-preview">
+                {imagePreviews.map((preview, index) => (
+                  <div key={index} className="preview-item">
+                    <img
+                      src={preview.url}
+                      alt={`Preview ${index + 1}`}
+                      className="preview-image"
+                    />
+                    <button
+                      type="button"
+                      className="remove-preview"
+                      onClick={() => removeImage(index)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || images.length === 0}
             className="submit-button"
           >
             {loading ? "Uploading..." : "Upload"}
@@ -261,15 +318,15 @@ export default function AdminPanel() {
           <h3>Uploaded Mugshots</h3>
           <div className="mugshots-grid">
             {uploadedMugshots.map((mugshot) => (
-              <div key={mugshot._id} className="mugshot-card">
+              <div key={mugshot.id} className="mugshot-card">
                 <img
-                  src={`data:image/jpeg;base64,${mugshot.image}`}
+                  src={mugshot.imageUrl}
                   alt={mugshot.description}
                   className="mugshot-image"
                 />
                 <div className="mugshot-info">
                   <p>{mugshot.description}</p>
-                  <p>Uploaded: {new Date(mugshot.createdAt).toLocaleDateString()}</p>
+                  {mugshot.isMainMugshot && <span className="main-badge">Main</span>}
                 </div>
               </div>
             ))}

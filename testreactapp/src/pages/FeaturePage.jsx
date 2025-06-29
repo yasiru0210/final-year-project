@@ -10,12 +10,20 @@ export default function FeaturePage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Load existing sketches from localStorage
+    // Load existing sketches metadata from localStorage
     const savedSketches = localStorage.getItem('sketches');
     if (savedSketches) {
-      setSketches(JSON.parse(savedSketches));
+      // Only metadata is stored in localStorage, so initialize sketches with empty image fields
+      const meta = JSON.parse(savedSketches);
+      setSketches(meta.map(s => ({ ...s, image: null })));
     }
   }, []);
+
+  const saveSketchesMetadata = (sketchesArr) => {
+    // Save only metadata (no image data) to localStorage
+    const meta = sketchesArr.map(({ id, name, timestamp, weights }) => ({ id, name, timestamp, weights }));
+    localStorage.setItem('sketches', JSON.stringify(meta));
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -39,10 +47,9 @@ export default function FeaturePage() {
             mouth: 1.0,
           }
         };
-        
         const updatedSketches = [...sketches, newSketch];
         setSketches(updatedSketches);
-        localStorage.setItem('sketches', JSON.stringify(updatedSketches));
+        saveSketchesMetadata(updatedSketches);
       };
       reader.readAsDataURL(file);
     }
@@ -62,13 +69,13 @@ export default function FeaturePage() {
       return sketch;
     });
     setSketches(updatedSketches);
-    localStorage.setItem('sketches', JSON.stringify(updatedSketches));
+    saveSketchesMetadata(updatedSketches);
   };
 
   const removeSketch = (id) => {
     const updatedSketches = sketches.filter(sketch => sketch.id !== id);
     setSketches(updatedSketches);
-    localStorage.setItem('sketches', JSON.stringify(updatedSketches));
+    saveSketchesMetadata(updatedSketches);
   };
 
   const submitSketches = () => {
